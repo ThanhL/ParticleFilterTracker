@@ -50,7 +50,13 @@ def main():
         ret, frame = cap.read()
 
         # Pass frame through yolo
-        frame = yolo_cv.darknet_process_frame(frame)
+        detections = yolo_cv.detect_objects(frame)
+        print(detections)
+        for detection in detections:
+            print("Boxes: ", detection["boxes"])
+            x, y, w, h = detection["boxes"]
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (255,0,0), 2)
+
 
         # Display the resulting frame
         cv2.imshow('frame',frame)
