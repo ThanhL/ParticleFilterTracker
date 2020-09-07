@@ -13,8 +13,7 @@ class YOLO_CV_Wrapper():
         self.nms_thresh = nms_thresh
 
         self.color = np.random.randint(0, 255, size=(len(self.yolo_classes), 3), dtype='uint8')
-
-
+        
         ## Darknet creation
         self.net = cv2.dnn.readNetFromDarknet(yolo_cfg, yolo_weights)
         
@@ -49,7 +48,6 @@ class YOLO_CV_Wrapper():
         # small objects (8112, 85)
         outputs = np.vstack(outputs)
 
-
         # bounding boxes, confidences, class ids
         boxes = []
         confidences = []
@@ -57,16 +55,19 @@ class YOLO_CV_Wrapper():
 
         ### Iterate through output and apply bounding boxes
         for output in outputs:
+            # Extract scores, class name and confidence from YOLO output
             scores = output[5:]
             classID = np.argmax(scores)
             confidence = scores[classID]
 
             if confidence > self.confidence_thresh:
+                # Extract detection centers and box coordinates/dimensions
                 box = output[:4] * np.array([w, h, w, h])
                 (centerX, centerY, width, height) = box.astype("int")
                 x = int(centerX - (width / 2))
                 y = int(centerY - (height / 2))
 
+                # Add yolo detection to array
                 boxes.append([x, y, int(width), int(height)])
                 confidences.append(float(confidence))
                 classIDs.append(classID)
@@ -74,7 +75,6 @@ class YOLO_CV_Wrapper():
         ### Apply Non-maxima supression
         idxs = cv2.dnn.NMSBoxes(boxes, confidences, self.confidence_thresh, self.nms_thresh)
         
-
         # ensure at least one detection exists
         if len(idxs) > 0:
             # loop over the indexes we are keeping
@@ -122,17 +122,19 @@ class YOLO_CV_Wrapper():
 
         ### Iterate through output and apply bounding boxes
         for output in outputs:
+            # Extract scores, class name and confidence from YOLO output
             scores = output[5:]
             classID = np.argmax(scores)
             confidence = scores[classID]
 
             if confidence > self.confidence_thresh:
+                # Extract detection centers and box coordinates/dimensions
                 box = output[:4] * np.array([w, h, w, h])
                 (centerX, centerY, width, height) = box.astype("int")
                 x = int(centerX - (width / 2))
                 y = int(centerY - (height / 2))
 
-
+                # Add yolo detection to array
                 boxes.append([x, y, int(width), int(height)])
                 centers.append([centerX, centerY])
                 confidences.append(float(confidence))
@@ -143,8 +145,8 @@ class YOLO_CV_Wrapper():
         
         # ensure at least one detection exists
         if len(idxs) > 0:
-            # loop over the indexes we are keeping
             for i in idxs.flatten():
+                # Append non-maxima suprression output into dictionary and array
                 detection = {}
                 detection["boxes"] = boxes[i]
                 detection["confidence"] = confidences[i]
