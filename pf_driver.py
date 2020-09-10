@@ -4,6 +4,9 @@ import argparse
 import numpy as np
 from YOLO_CV_Wrapper import YOLO_CV_Wrapper
 from Particles import Particles
+from ParticleFilter import *
+from MultiParticleFilterTracker import MultiParticleFilterTracker
+
 
 DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
 YOLOV3_SPP_WEIGHTS = "./models/yolov3/yolov3-spp.weights"
@@ -13,16 +16,26 @@ YOLOV3_CFG = "./models/yolov3/yolov3.cfg"
 COCO_CLASSES_TXT = "./models/yolov3/coco.names"
 YOLO_CONFIDENCE_THRESH = 0.5
 
-# Particle filter params
-N = 100
-initial_estimate_covariance = np.array([4, 2, 4, 2]) 
+## Particle filter params
+N = 100                                                 # Number of particles per object
+initial_estimate_covariance = np.array([4, 2, 4, 2])    # 
 
-### Particles utility funcs
+### Particles Opencv utility funcs
 def draw_particles(frame, particles):
     for particle in particles:
         x, x_dot, y, y_dot = particle
         cv2.circle(frame, (int(x), int(y)), 2, (255,0,255))
     return frame
+
+def draw_particles_mean(frame, particles, weights):
+    ## Get mean and covariance from particles and their respective weights
+    particles_mean, particles_covariance = estimate_particles(particles, weights)
+    x, x_dot, y, y_dot = particles_mean
+
+    ## Draw with the calculated mean
+    cv2.circle(frame, (int(x), int(y)), 2, (255,255,255))
+    return frame
+
 
 ### Driver main
 def main():
@@ -49,12 +62,12 @@ def main():
                             gpu_enabled=gpu_enable,
                             confidence_thresh=YOLO_CONFIDENCE_THRESH)
 
+    ### Particle Filter Tracker Creation
+    multi_pf_tracker = MultiParticleFilterTracker(N)
 
-    ### Run the tracker
+    ### Run the tracker on video
     cap = cv2.VideoCapture(video)
 
-
-    ### Particles
     while True:
         # Capture frame-by-frame
         ret, frame = cap.read()
@@ -68,19 +81,14 @@ def main():
             cv2.rectangle(frame, (x, y), (x + w, y + h), (255,0,0), 2)
 
 
-            det_x, det_y = detection["center"]
-
-            test_particles = Particles(N=N)
-            test_particles.particles = test_particles.create_gaussian_particles(mu=(det_x, 0, det_y, 0),
-                                                                            std=initial_estimate_covariance)
-
-            print("Particles: ")
-            print(test_particles.particles)
-
+        ### Update particles with detection
+        multi_pf_tracker.update_particles(detections)
 
 
         ### Draw particles onto frame
-        frame = draw_particles(frame, test_particles.particles)
+        for pf_track in multi_pf_tracker.particle_tracks:
+            frame = draw_particles(frame, pf_track.particles)
+            frame = draw_particles_mean(frame, pf_track.particles, pf_track.weights)
 
         ### Display the resulting frame
         cv2.imshow('frame',frame)

@@ -136,7 +136,7 @@ class YOLO_CV_Wrapper():
 
                 # Add yolo detection to array
                 boxes.append([x, y, int(width), int(height)])
-                centers.append([centerX, centerY])
+                centers.append(np.array([centerX, centerY]))
                 confidences.append(float(confidence))
                 classIDs.append(classID)
 

@@ -29,6 +29,7 @@ def resample_from_index(particles, weights, indexes):
     particles[:] = particles[indexes]
     weights.resize(len(particles))
     weights.fill(1.0 / len(weights))
+    return particles, weights
 
 ## Number of effective weights
 def neff(weights):
@@ -68,6 +69,8 @@ def pf_predict(particles, dt, process_noise):
     dt: delta time
     process_noise: Process noise for each state [x, x_dot, y, y_dot].T
     """
+    N = len(particles)
+
     # Update x and x_dot
     particles[:,0] += particles[:,1] * dt +  (np.random.randn(N) * process_noise[0])
     particles[:,1] += (np.random.randn(N) * process_noise[1])
@@ -78,20 +81,23 @@ def pf_predict(particles, dt, process_noise):
 
 
 # Particle filter update step with landmarks and measurements
-def pf_update(particles, weights, z_t, sensor_noise):
+def pf_update(particles, weights, z_t, sensor_noise, detection_landmark):
     # Iterate through each landmark and calculate the weighting probability
     # Calculate weighting probability with respect to measurement from detector
     # Detection gives x,y position, so we will use the euclidean dist
     # from each particle w.r.t to dist to calculate the weighting
     # w_t[m] = p(z_t | x_t[m])
-    dist = np.linalg.norm(particles[:, 0:2] - z_t, axis=1)
+    N = len(particles)
+
+    position_particles = np.hstack((particles[:, 0].reshape(-1,1), particles[:, 2].reshape(-1,1)))
+    dist = np.linalg.norm(position_particles - detection_landmark, axis=1)
     weights = scipy.stats.norm(dist, sensor_noise).pdf(z_t)
 
     weights += 1.e-300              # For round off error
     weights /= np.sum(weights)      # Normalize weights 
     return weights
 
-# Estimation of particles
+# Estimated state from particles by comput weighted mean and covariance of particle distribution
 def estimate_particles(particles, weights):
     mean = np.average(particles, weights=weights, axis=0)
     covariance_matrix = np.average((particles - mean)**2, weights=weights, axis=0)
