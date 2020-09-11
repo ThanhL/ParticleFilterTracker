@@ -8,13 +8,13 @@ from ParticleFilter import *
 from MultiParticleFilterTracker import MultiParticleFilterTracker
 
 
-DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
+DEFAULT_VIDEO = "./datasets/TownCenter.mp4"
 YOLOV3_SPP_WEIGHTS = "./models/yolov3/yolov3-spp.weights"
 YOLOV3_SPP_CFG = "./models/yolov3/yolov3-spp.cfg"
 YOLOV3_WEIGHTS = "./models/yolov3/yolov3.weights"
 YOLOV3_CFG = "./models/yolov3/yolov3.cfg"
 COCO_CLASSES_TXT = "./models/yolov3/coco.names"
-YOLO_CONFIDENCE_THRESH = 0.5
+YOLO_CONFIDENCE_THRESH = 0.7
 
 ## Particle filter params
 N = 100                                                 # Number of particles per object
