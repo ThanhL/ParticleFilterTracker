@@ -9,17 +9,18 @@ from MultiParticleFilterTracker import MultiParticleFilterTracker
 
 
 DEFAULT_VIDEO = "./datasets/TownCenter.mp4"
-#DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
+# DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
+# DEFAULT_VIDEO = "./datasets/volkswagen_pikes_peak_original_cut_3.mp4"
 
 YOLOV3_SPP_WEIGHTS = "./models/yolov3/yolov3-spp.weights"
 YOLOV3_SPP_CFG = "./models/yolov3/yolov3-spp.cfg"
 YOLOV3_WEIGHTS = "./models/yolov3/yolov3.weights"
 YOLOV3_CFG = "./models/yolov3/yolov3.cfg"
 COCO_CLASSES_TXT = "./models/yolov3/coco.names"
-YOLO_CONFIDENCE_THRESH = 0.7
+YOLO_CONFIDENCE_THRESH = 0.6
 
 ## Particle filter params
-N = 100                                                 # Number of particles per object
+N = 200                                                 # Number of particles per object
 initial_estimate_covariance = np.array([4, 2, 4, 2])    # 
 
 ### Particles Opencv utility funcs
@@ -35,7 +36,26 @@ def draw_particles_mean(frame, particles, weights):
     x, x_dot, y, y_dot = particles_mean
 
     ## Draw with the calculated mean
-    cv2.circle(frame, (int(x), int(y)), 2, (255,255,255))
+    cv2.circle(frame, (int(x), int(y)), 4, (255,255,255), -1)
+    return frame
+
+def draw_pf_track(frame, pf_track, color=(255,255,0)):
+    ### Draws track estimates from particles and their id
+    ## Draw all particles
+    frame = draw_particles(frame, pf_track.particles)
+
+    ## Draw position estimate of particle set
+    # First get the mean estimate and extract states
+    particles_mean, particles_covariance = estimate_particles(pf_track.particles, pf_track.weights)
+    x, x_dot, y, y_dot = particles_mean
+
+    # Draw the calculated mean
+    cv2.circle(frame, (int(x), int(y)), 4, color, -1)
+
+    ## Draw track ID
+    cv2.putText(frame, "ID: {}".format(str(pf_track.trackID)), (int(x), int(y)), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
     return frame
 
 
@@ -89,12 +109,10 @@ def main():
 
         ### Draw particles onto frame
         for pf_track in multi_pf_tracker.particle_tracks:
-            frame = draw_particles(frame, pf_track.particles)
-            frame = draw_particles_mean(frame, pf_track.particles, pf_track.weights)
-            # print(pf_track.particle_set.particles)
-            # frame = draw_particles(frame, pf_track.particle_set.particles)
-            # frame = draw_particles_mean(frame, pf_track.particle_set.particles, pf_track.particle_set.weights)
+            # frame = draw_particles(frame, pf_track.particles)
+            # frame = draw_particles_mean(frame, pf_track.particles, pf_track.weights)
 
+            frame = draw_pf_track(frame, pf_track)
 
         ### Display the resulting frame
         cv2.imshow('frame',frame)

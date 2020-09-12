@@ -71,7 +71,7 @@ class ParticleTrack():
 
 
 class MultiParticleFilterTracker():
-    def __init__(self, N, euclidean_dist_thresh=30, max_track_strikes=15):
+    def __init__(self, N, euclidean_dist_thresh=20, max_track_strikes=5):
         # Particle set for each unique object
         self.particle_tracks = []
 
@@ -79,7 +79,7 @@ class MultiParticleFilterTracker():
         self.N = N
 
         # Initial estimate covariance
-        self.initial_estimate_covariance = np.array([4, 2, 4, 2])
+        self.initial_estimate_covariance = np.array([2, 4, 2, 4])
 
         # Gaussian process noise for states x, x_dot, y, y_dot
         self.process_noise = np.array([2,4,2,4])
@@ -94,8 +94,29 @@ class MultiParticleFilterTracker():
         self.max_track_strikes = max_track_strikes
 
 
-    def update_particle_tracks(self, detections, dt=0.6):
-        # ### Predict step
+    def extract_position_estimates(self):
+        ## Extract position estimates from all particle sets so they can 
+        ## be used for hungarian assignment's cost matrix
+        all_track_mean_postion = []
+        for pf_track in self.particle_tracks:
+            track_mu, track_cov = estimate_particles(pf_track.particles, pf_track.weights)
+            track_position = np.array([track_mu[0], track_mu[2]])
+            all_track_mean_postion.append(track_position)
+        all_track_mean_postion = np.array(all_track_mean_postion)              
+        return all_track_mean_postion
+
+    def extract_detection_centers(self, detections):
+        ## Extract all detection centers so they can be used for hungarian assignment cost matrix
+        detection_center_positions = []
+        for detection in detections:
+            detection_center = detection["center"]
+            detection_center_positions.append(detection_center)
+        detection_center_positions = np.array(detection_center_positions)
+        return detection_center_positions
+
+
+    def update_particle_tracks(self, detections, dt=0.5):
+        ### Predict step
         for pf_track in self.particle_tracks:
             pf_track.particles = pf_predict(pf_track.particles, dt, process_noise=self.process_noise)
 
@@ -124,20 +145,10 @@ class MultiParticleFilterTracker():
                 ## in hungarian assignment
                 ## TODO: figure out best way computationally to keep track of all the means
                 # Extract all track mean position
-                all_track_mean_postion = []
-                for pf_track in self.particle_tracks:
-                    track_mu, track_cov = estimate_particles(pf_track.particles, pf_track.weights)
-                    track_position = np.array([track_mu[0], track_mu[2]])
-                    all_track_mean_postion.append(track_position)
-                all_track_mean_postion = np.array(all_track_mean_postion)              
+                all_track_mean_postion = self.extract_position_estimates()
 
-                # Extract all detections and place in matrix
-                detection_center_positions = []
-                for detection in detections:
-                    detection_center = detection["center"]
-                    detection_center_positions.append(detection_center)
-                detection_center_positions = np.array(detection_center_positions)
-
+                # Extract detection centers
+                detection_center_positions = self.extract_detection_centers(detections) 
 
                 # Calculate euclidean distance matrix with detection centers and particle means
                 euclidean_distance_matrix = distance_matrix(all_track_mean_postion, detection_center_positions)
@@ -167,19 +178,20 @@ class MultiParticleFilterTracker():
                         self.particle_tracks[i].weights = pf_update(self.particle_tracks[i].particles, 
                                                                 self.particle_tracks[i].weights, 
                                                                 dist_from_det_to_mean, 
-                                                                sensor_noise=2, 
+                                                                sensor_noise=1, 
                                                                 detection_landmark=assigned_detections[i])
 
                         # Resample if we drop below the number of effective particles
                         if neff(self.particle_tracks[i].weights) < (len(self.particle_tracks[i].particles) / 2):
                             # # Resample with resampling wheel
-                            # particles = resampling_wheel(particles, weights)
+                            self.particle_tracks[i].particles = resampling_wheel(self.particle_tracks[i].particles, 
+                                                                                self.particle_tracks[i].weights)
 
-                            # Resample with staatified resample
-                            indexes = stratified_resample(self.particle_tracks[i].weights)
+                            # # Resample with staatified resample
+                            # indexes = stratified_resample(self.particle_tracks[i].weights)
 
-                            self.particle_tracks[i].particles, self.particle_tracks[i].weights = resample_from_index(
-                                self.particle_tracks[i].particles, self.particle_tracks[i].weights, indexes)
+                            # self.particle_tracks[i].particles, self.particle_tracks[i].weights = resample_from_index(
+                            #     self.particle_tracks[i].particles, self.particle_tracks[i].weights, indexes)
                             assert np.allclose(self.particle_tracks[i].weights, 1/self.N)
 
                     else:

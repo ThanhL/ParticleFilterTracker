@@ -31,6 +31,34 @@ def resample_from_index(particles, weights, indexes):
     weights.fill(1.0 / len(weights))
     return particles, weights
 
+# Resampling Wheel
+# From AI for Robotics Sebastian Thrun Course
+def resampling_wheel(particles,weights):
+    N = len(particles)
+
+    resampled_particles = []
+
+    # Generate indexes
+    index = np.random.randint(0, N, 1).squeeze()
+    # Initialize beta
+    beta = 0.0
+    # Initialize max weight
+    max_weight = np.max(weights)
+
+    for i in range(N):
+        beta = beta + np.random.uniform(0, 2*max_weight, 1).squeeze()
+
+        while beta > weights[index]:
+            beta = beta - weights[index]
+            index = (index + 1) % N  # Mod for circular motion around array
+        resampled_particles.append(particles[index])
+
+    # Reinit weights
+    weights.fill(1.0 / len(weights))
+
+    return np.array(resampled_particles)
+
+
 ## Number of effective weights
 def neff(weights):
     return 1. / np.sum(np.square(weights))
