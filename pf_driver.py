@@ -9,6 +9,8 @@ from MultiParticleFilterTracker import MultiParticleFilterTracker
 
 
 DEFAULT_VIDEO = "./datasets/TownCenter.mp4"
+#DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
+
 YOLOV3_SPP_WEIGHTS = "./models/yolov3/yolov3-spp.weights"
 YOLOV3_SPP_CFG = "./models/yolov3/yolov3-spp.cfg"
 YOLOV3_WEIGHTS = "./models/yolov3/yolov3.weights"
@@ -82,13 +84,17 @@ def main():
 
 
         ### Update particles with detection
-        multi_pf_tracker.update_particles(detections)
+        multi_pf_tracker.update_particle_tracks(detections)
 
 
         ### Draw particles onto frame
         for pf_track in multi_pf_tracker.particle_tracks:
             frame = draw_particles(frame, pf_track.particles)
             frame = draw_particles_mean(frame, pf_track.particles, pf_track.weights)
+            # print(pf_track.particle_set.particles)
+            # frame = draw_particles(frame, pf_track.particle_set.particles)
+            # frame = draw_particles_mean(frame, pf_track.particle_set.particles, pf_track.particle_set.weights)
+
 
         ### Display the resulting frame
         cv2.imshow('frame',frame)
