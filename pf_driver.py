@@ -1,3 +1,4 @@
+### Libraries
 import cv2
 import time
 import argparse
@@ -7,9 +8,12 @@ from Particles import Particles
 from ParticleFilter import *
 from MultiParticleFilterTracker import MultiParticleFilterTracker
 
+# Set seed for repeatability
+np.random.seed(seed=200)
 
+## Global Parameters
 DEFAULT_VIDEO = "./datasets/TownCenter.mp4"
-# DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
+DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
 # DEFAULT_VIDEO = "./datasets/volkswagen_pikes_peak_original_cut_3.mp4"
 # DEFAULT_VIDEO = "./datasets/MOT20-02-raw.webm"
 
@@ -20,15 +24,19 @@ YOLOV3_CFG = "./models/yolov3/yolov3.cfg"
 COCO_CLASSES_TXT = "./models/yolov3/coco.names"
 YOLO_CONFIDENCE_THRESH = 0.6
 
+## Color matrix for each unique track
+MAX_TRACKS = 300
+TRACK_COLORS = [tuple(np.random.randint(0,255,(1,3), dtype="int").squeeze()) for i in range(MAX_TRACKS)]
+
 ## Particle filter params
 N = 200                                                 # Number of particles per object
 initial_estimate_covariance = np.array([4, 2, 4, 2])    # 
 
 ### Particles Opencv utility funcs
-def draw_particles(frame, particles):
+def draw_particles(frame, particles, color=(255,255,0)):
     for particle in particles:
         x, x_dot, y, y_dot = particle
-        cv2.circle(frame, (int(x), int(y)), 2, (255,0,255))
+        cv2.circle(frame, (int(x), int(y)), 2, color)
     return frame
 
 def draw_particles_mean(frame, particles, weights):
@@ -43,7 +51,7 @@ def draw_particles_mean(frame, particles, weights):
 def draw_pf_track(frame, pf_track, color=(255,255,0)):
     ### Draws track estimates from particles and their id
     ## Draw all particles
-    frame = draw_particles(frame, pf_track.particles)
+    frame = draw_particles(frame, pf_track.particles, color=color)
 
     ## Draw position estimate of particle set
     # First get the mean estimate and extract states
@@ -51,10 +59,10 @@ def draw_pf_track(frame, pf_track, color=(255,255,0)):
     x, x_dot, y, y_dot = particles_mean
 
     # Draw the calculated mean
-    cv2.circle(frame, (int(x), int(y)), 4, color, -1)
+    cv2.circle(frame, (int(x), int(y)), 4,  (255,255,255), -1)
 
     ## Draw track ID
-    cv2.putText(frame, "ID: {}".format(str(pf_track.trackID)), (int(x), int(y)), 
+    cv2.putText(frame, "ID: {}".format(str(pf_track.trackID)), (int(x), int(y-20)), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
     return frame
@@ -88,8 +96,17 @@ def main():
     ### Particle Filter Tracker Creation
     multi_pf_tracker = MultiParticleFilterTracker(N)
 
+
     ### Run the tracker on video
     cap = cv2.VideoCapture(video)
+
+    # Extract first frame details
+    ret, frame = cap.read()
+    print(frame.shape)
+
+    # Define the codec and create VideoWriter object for saving video
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter('output.avi',fourcc, 20.0, (frame.shape[1],frame.shape[0]))
 
     while True:
         # Capture frame-by-frame
@@ -112,10 +129,15 @@ def main():
             # frame = draw_particles(frame, pf_track.particles)
             # frame = draw_particles_mean(frame, pf_track.particles, pf_track.weights)
 
-            frame = draw_pf_track(frame, pf_track)
+            frame = draw_pf_track(frame, pf_track, color=(int(TRACK_COLORS[pf_track.trackID][0]),
+                                                        int(TRACK_COLORS[pf_track.trackID][1]),
+                                                        int(TRACK_COLORS[pf_track.trackID][2])))
 
         ### Display the resulting frame
         cv2.imshow('frame',frame)
+
+        ### Save frame to video
+        out.write(frame)
         
         ### Wait for key press if debug enabled
         if debug_cv:
@@ -126,8 +148,9 @@ def main():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-        # When everything done, release the capture
+    # When everything done, release the capture
     cap.release()
+    out.release()
     cv2.destroyAllWindows()
             
 

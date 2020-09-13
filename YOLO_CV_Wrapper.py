@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-np.random.seed(seed=501)
+np.random.seed(seed=343)
 
 class YOLO_CV_Wrapper():
     def __init__(self, yolo_weights, yolo_cfg, yolo_classes, gpu_enabled=False, confidence_thresh=0.5,

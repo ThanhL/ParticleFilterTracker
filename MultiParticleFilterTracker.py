@@ -71,21 +71,25 @@ class ParticleTrack():
 
 
 class MultiParticleFilterTracker():
-    def __init__(self, N, euclidean_dist_thresh=40, max_track_strikes=10):
+    def __init__(self, N, euclidean_dist_thresh=50, max_track_strikes=10):
         # Particle set for each unique object
         self.particle_tracks = []
 
         # Number of particles to use across all sets
         self.N = N
 
-        # Initial estimate covariance
-        self.initial_estimate_covariance = np.array([2, 4, 2, 4])
+        # Initial states
+        # Note: we don't need to set initial x or y as the detection centers will be the initial values for these
+        self.initial_estimate_covariance = np.array([2, 4, 2, 4])   # Initial estimate covarianc
+        self.initial_x_dot = 2  # Initial x velocity
+        self.initial_y_dot = 2  # Initial y velocity
 
         # Gaussian process noise for states x, x_dot, y, y_dot
-        self.process_noise = np.array([0.5,1,0.5,1])
+        self.process_noise = np.array([1.5,2,1.5,2])
+        # self.process_noise = np.array([2.5,4.2,2.5,4.2])
 
         # Sensor noise for detection measurements from yolo
-        self.sensor_noise = 2
+        self.sensor_noise = 4   # 1-3 seems to be good
 
         # ID count
         self.id_count = 0
@@ -135,7 +139,7 @@ class MultiParticleFilterTracker():
                     # Create new particle set
                     new_particle_track = ParticleTrack(self.N, self.id_count)
                     new_particle_track.particles = new_particle_track.create_gaussian_particles(
-                                                                    mu=(det_center_x, 0.4, det_center_y, 0.4),
+                                                                    mu=(det_center_x, self.initial_x_dot, det_center_y, self.initial_y_dot),
                                                                     std=self.initial_estimate_covariance)
 
                     self.particle_tracks.append(new_particle_track)
@@ -203,18 +207,18 @@ class MultiParticleFilterTracker():
 
                         ## Resample if we drop below the number of effective particles
                         if neff(self.particle_tracks[row_ind[i]].weights) < (len(self.particle_tracks[row_ind[i]].particles) / 2):
-                            # Resample with resampling wheel
-                            self.particle_tracks[row_ind[i]].particles = resampling_wheel(self.particle_tracks[row_ind[i]].particles, 
-                                                                                self.particle_tracks[row_ind[i]].weights)
+                            # # Resample with resampling wheel
+                            # self.particle_tracks[row_ind[i]].particles = resampling_wheel(self.particle_tracks[row_ind[i]].particles, 
+                            #                                                     self.particle_tracks[row_ind[i]].weights)
 
-                            # # Resample with staatified resample
-                            # indexes = stratified_resample(self.particle_tracks[row_ind[i]].weights)
+                            # Resample with staatified resample
+                            indexes = stratified_resample(self.particle_tracks[row_ind[i]].weights)
 
-                            # self.particle_tracks[row_ind[i]].particles, self.particle_tracks[row_ind[i]].weights = resample_from_index(
-                            #     self.particle_tracks[row_ind[i]].particles, self.particle_tracks[row_ind[i]].weights, indexes)
+                            self.particle_tracks[row_ind[i]].particles, self.particle_tracks[row_ind[i]].weights = resample_from_index(
+                                self.particle_tracks[row_ind[i]].particles, self.particle_tracks[row_ind[i]].weights, indexes)
 
                             # Ensure after resampling all weights are the same for this particle distribution
-                            assert np.allclose(self.particle_tracks[row_ind[i]].weights, 1/self.N)
+                            assert np.allclose(self.particle_tracks[row_ind[i]].weights, 1./self.N)
                     
                     else:
                         ### Reject this measurement and add a strike
@@ -236,7 +240,7 @@ class MultiParticleFilterTracker():
                     # Create new particle set
                     new_particle_track = ParticleTrack(self.N, self.id_count)
                     new_particle_track.particles = new_particle_track.create_gaussian_particles(
-                                                                    mu=(det_center_x, 0.4, det_center_y, 0.4),
+                                                                    mu=(det_center_x, self.initial_x_dot, det_center_y, self.initial_y_dot),
                                                                     std=self.initial_estimate_covariance)
 
                     # Add new particle set to existing tracks
