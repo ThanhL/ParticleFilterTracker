@@ -11,6 +11,7 @@ from MultiParticleFilterTracker import MultiParticleFilterTracker
 DEFAULT_VIDEO = "./datasets/TownCenter.mp4"
 # DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
 # DEFAULT_VIDEO = "./datasets/volkswagen_pikes_peak_original_cut_3.mp4"
+# DEFAULT_VIDEO = "./datasets/MOT20-02-raw.webm"
 
 YOLOV3_SPP_WEIGHTS = "./models/yolov3/yolov3-spp.weights"
 YOLOV3_SPP_CFG = "./models/yolov3/yolov3-spp.cfg"
@@ -96,9 +97,8 @@ def main():
 
         # Pass frame through yolo
         detections = yolo_cv.detect_objects(frame)
-        print(detections)
+
         for detection in detections:
-            print("Boxes: ", detection["boxes"])
             x, y, w, h = detection["boxes"]
             cv2.rectangle(frame, (x, y), (x + w, y + h), (255,0,0), 2)
 
