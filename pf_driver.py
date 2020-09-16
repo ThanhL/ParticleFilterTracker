@@ -77,7 +77,7 @@ def main():
     parser.add_argument('--video', dest='video', default=DEFAULT_VIDEO,
                         help='video to track object')
     parser.add_argument('--gpu', type=bool, default=False)
-    parser.add_argument('--debug_cv', type=bool, default=False)
+    parser.add_argument('--debug_cv', default=False, action="store_true")
 
 
     args = parser.parse_args()
