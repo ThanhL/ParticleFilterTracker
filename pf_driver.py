@@ -102,7 +102,6 @@ def main():
 
     # Extract first frame details
     ret, frame = cap.read()
-    print(frame.shape)
 
     # Define the codec and create VideoWriter object for saving video
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -126,9 +125,7 @@ def main():
 
         ### Draw particles onto frame
         for pf_track in multi_pf_tracker.particle_tracks:
-            # frame = draw_particles(frame, pf_track.particles)
-            # frame = draw_particles_mean(frame, pf_track.particles, pf_track.weights)
-
+            # Draw particle filter track containing particles for the track, mean position and ID number
             frame = draw_pf_track(frame, pf_track, color=(int(TRACK_COLORS[pf_track.trackID][0]),
                                                         int(TRACK_COLORS[pf_track.trackID][1]),
                                                         int(TRACK_COLORS[pf_track.trackID][2])))
