@@ -13,7 +13,7 @@ np.random.seed(seed=200)
 
 ## Global Parameters
 DEFAULT_VIDEO = "./datasets/TownCenter.mp4"
-DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
+# DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
 # DEFAULT_VIDEO = "./datasets/volkswagen_pikes_peak_original_cut_3.mp4"
 # DEFAULT_VIDEO = "./datasets/MOT20-02-raw.webm"
 

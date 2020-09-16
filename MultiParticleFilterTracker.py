@@ -211,11 +211,14 @@ class MultiParticleFilterTracker():
                             # self.particle_tracks[row_ind[i]].particles = resampling_wheel(self.particle_tracks[row_ind[i]].particles, 
                             #                                                     self.particle_tracks[row_ind[i]].weights)
 
-                            # Resample with staatified resample
-                            indexes = stratified_resample(self.particle_tracks[row_ind[i]].weights)
+                            # # Resample with staatified resample
+                            # indexes = stratified_resample(self.particle_tracks[row_ind[i]].weights)
 
-                            self.particle_tracks[row_ind[i]].particles, self.particle_tracks[row_ind[i]].weights = resample_from_index(
-                                self.particle_tracks[row_ind[i]].particles, self.particle_tracks[row_ind[i]].weights, indexes)
+                            # self.particle_tracks[row_ind[i]].particles, self.particle_tracks[row_ind[i]].weights = resample_from_index(
+                            #     self.particle_tracks[row_ind[i]].particles, self.particle_tracks[row_ind[i]].weights, indexes)
+
+                            self.particle_tracks[row_ind[i]].particles = stratified_resample(self.particle_tracks[row_ind[i]].particles,
+                                                                                            self.particle_tracks[row_ind[i]].weights)
 
                             # Ensure after resampling all weights are the same for this particle distribution
                             assert np.allclose(self.particle_tracks[row_ind[i]].weights, 1./self.N)

@@ -9,9 +9,10 @@ from Particles import Particles
 # Stratified Resampling strategy for particles
 # Adapted from rlabbe: https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python/blob/master/12-Particle-Filters.ipynb
 # Stratified resample
-def stratified_resample(weights):
+def stratified_resample(particles, weights):
     N = len(weights)
-    # make N subdivisions, chose a random position within each one
+
+    ### Determine indexes using stratified strategy
     positions = (np.random.random(N) + range(N)) / N
 
     indexes = np.zeros(N, 'i')
@@ -23,13 +24,13 @@ def stratified_resample(weights):
             i += 1
         else:
             j += 1
-    return indexes
 
-def resample_from_index(particles, weights, indexes):
+    ### Resample the particles with the indexes from stratified strategy
     particles[:] = particles[indexes]
     weights.resize(len(particles))
     weights.fill(1.0 / len(weights))
-    return particles, weights
+
+    return particles
 
 # Resampling Wheel
 # From AI for Robotics Sebastian Thrun Course
