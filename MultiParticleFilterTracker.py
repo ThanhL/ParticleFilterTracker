@@ -4,6 +4,8 @@ from ParticleFilter import *
 from scipy.spatial import distance_matrix
 from scipy.optimize import linear_sum_assignment
 
+### Global Params
+DEBUG = True
 
 class ParticleTrack():
     def __init__(self, N, trackID, process_noise=[0.2,2,0.2,2], sensor_noise=2):
@@ -69,7 +71,6 @@ class ParticleTrack():
         return particles
 
 
-
 class MultiParticleFilterTracker():
     def __init__(self, N, euclidean_dist_thresh=50, max_track_strikes=10):
         # Particle set for each unique object
@@ -86,7 +87,6 @@ class MultiParticleFilterTracker():
 
         # Gaussian process noise for states x, x_dot, y, y_dot
         self.process_noise = np.array([1.5,2,1.5,2])
-        # self.process_noise = np.array([2.5,4.2,2.5,4.2])
 
         # Sensor noise for detection measurements from yolo
         self.sensor_noise = 4   # 1-3 seems to be good
@@ -146,7 +146,6 @@ class MultiParticleFilterTracker():
 
                     # Update ID counter
                     self.id_count += 1
-
             else:
                 ### Use hungarian assignment to calculate detection particle track pairs
                 ## Get the means of each particle set and detection and calculate distance matrix to be used 
@@ -166,25 +165,26 @@ class MultiParticleFilterTracker():
                 # Get unassigned detections based on the column indexes of hungarian assignment
                 unassigned_detections = np.delete(detection_center_positions, col_ind, axis=0)
 
+                ### Debugging
+                if DEBUG: 
+                    # Debugging hungarian assignment
+                    for i in range(len(col_ind)):
+                        track_mu, track_cov = estimate_particles(self.particle_tracks[row_ind[i]].particles,
+                                                                self.particle_tracks[row_ind[i]].weights)
+                        track_position = (track_mu[0], track_mu[2])
 
-                # Debugging hungarian assignment
-                for i in range(len(col_ind)):
-                    track_mu, track_cov = estimate_particles(self.particle_tracks[row_ind[i]].particles,
-                                                            self.particle_tracks[row_ind[i]].weights)
-                    track_position = (track_mu[0], track_mu[2])
+                        print("Track {}: {}".format(self.particle_tracks[row_ind[i]].trackID, 
+                                                track_position))
+                        print("{} --> {}".format(all_track_mean_postion[row_ind[i]], detection_center_positions[col_ind[i]]))
+                        print("Euclidean Dist from matrix: {}".format(euclidean_distance_matrix[row_ind[i]][col_ind[i]]))
+                        print("Euclidean Dist from calculation: {}".format(
+                            np.linalg.norm(track_position - detection_center_positions[col_ind[i]])))
+                        print()
 
-                    print("Track {}: {}".format(self.particle_tracks[row_ind[i]].trackID, 
-                                            track_position))
-                    print("{} --> {}".format(all_track_mean_postion[row_ind[i]], detection_center_positions[col_ind[i]]))
-                    print("Euclidean Dist from matrix: {}".format(euclidean_distance_matrix[row_ind[i]][col_ind[i]]))
-                    print("Euclidean Dist from calculation: {}".format(
-                        np.linalg.norm(track_position - detection_center_positions[col_ind[i]])))
-                    print()
-
-                # Debug tracks
-                for i in range(len(self.particle_tracks)):
-                    print("Particle Track ID: {} \t Strikes: {}".format(self.particle_tracks[i].trackID, 
-                                                                    self.particle_tracks[i].track_strikes))
+                    # Debug tracks
+                    for i in range(len(self.particle_tracks)):
+                        print("Particle Track ID: {} \t Strikes: {}".format(self.particle_tracks[i].trackID, 
+                                                                        self.particle_tracks[i].track_strikes))
                 
                 ### For each assigned detection, update the corresponding particle sets
                 ## Particle sets should be in the order with the assigned_detections
@@ -207,16 +207,7 @@ class MultiParticleFilterTracker():
 
                         ## Resample if we drop below the number of effective particles
                         if neff(self.particle_tracks[row_ind[i]].weights) < (len(self.particle_tracks[row_ind[i]].particles) / 2):
-                            # # Resample with resampling wheel
-                            # self.particle_tracks[row_ind[i]].particles = resampling_wheel(self.particle_tracks[row_ind[i]].particles, 
-                            #                                                     self.particle_tracks[row_ind[i]].weights)
-
-                            # # Resample with staatified resample
-                            # indexes = stratified_resample(self.particle_tracks[row_ind[i]].weights)
-
-                            # self.particle_tracks[row_ind[i]].particles, self.particle_tracks[row_ind[i]].weights = resample_from_index(
-                            #     self.particle_tracks[row_ind[i]].particles, self.particle_tracks[row_ind[i]].weights, indexes)
-
+                            # Resample particles with stratified resampling
                             self.particle_tracks[row_ind[i]].particles = stratified_resample(self.particle_tracks[row_ind[i]].particles,
                                                                                             self.particle_tracks[row_ind[i]].weights)
 
@@ -251,4 +242,3 @@ class MultiParticleFilterTracker():
 
                     # Update ID counter
                     self.id_count += 1                
-                
