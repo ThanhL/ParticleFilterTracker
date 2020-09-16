@@ -134,3 +134,6 @@ datasets/
 
 # Models
 models/
+
+# Outputs
+*.avi
