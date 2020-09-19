@@ -14,5 +14,13 @@ YOLO detection outputs are used as measurement updates for the particle filter a
 ## Usage
 
 ## References
-* [YOLO object detection with OpenCV](https://www.pyimagesearch.com/2018/11/12/yolo-object-detection-with-opencv/)
- 
+[1] YOLO object detection with OpenCV, Adrian Rosebrock. https://www.pyimagesearch.com/2018/11/12/yolo-object-detection-with-opencv/
+
+[2] Kalman and Bayesian Filters in Python - Particle Filters, Roger Labbe. https://github.com/rlabbe/
+Kalman-and-Bayesian-Filters-in-Python/blob/master/12-Particle-Filters.ipynb
+
+[3] Multi Object Tracking Tutorial, Student Dave. https://www.youtube.com/watch?v=Me0wbxEDO4I&feature=youtu.be
+
+[4] Thrun, Sebastian., Burgard, Wolfram., Fox, Dieter. *Probablistic Robotics*, 2005.
+
+[5] Hungarian algorithm, Wikipedia. https://en.wikipedia.org/wiki/Hungarian_algorithm
