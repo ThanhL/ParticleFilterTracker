@@ -11,7 +11,33 @@ The particle filter is responsible for tracking the positions (x,y) and the velo
 
 YOLO detection outputs are used as measurement updates for the particle filter algorithm. To match these detections
 
-## Usage
+## Setup/Installation
+
+This project was built and tested with Python 3.8.5. Has not been tested with Python 2.7. The required packages and their versions are located in the requirements.txt file. 
+
+To run this project, first clone the repository and install the required python packages with the requirements.txt:
+
+```
+$ cd <directory you want to install to>
+$ git clone https://github.com/ThanhL/ParticleFilterTracker.git
+$ cd ParticleFilterTracker
+$ pip install -r requirements.txt
+```
+
+Since this particle filter tracker uses YOLO detection as it measurements when tracking objects, we first need to download the following files and store them in the models folder. 
+
+* **YOLO weights**: File containing the pre-trained network's weights.
+* **YOLO cfg**: File containing the network configuration.
+* **coco.names**: File containing the 80 different class names used in COCO dataset. coco.names can be downloaded [here](https://github.com/pjreddie/darknet/blob/master/data/coco.names)
+
+Note the code was built and tested with YOLO-v3 SPP architecture. The cfg and pretrained YOLO weights can be downloaded from  https://pjreddie.com/darknet/yolo/ unser *Performance on the COCO Dataset*.
+
+## Basic Use
+
+To use the multi o
+
+
+
 
 
 ## References
