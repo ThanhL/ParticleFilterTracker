@@ -12,16 +12,9 @@ from MultiParticleFilterTracker import MultiParticleFilterTracker
 np.random.seed(seed=200)
 
 ## Global Parameters
-DEFAULT_VIDEO = "./datasets/TownCenter.mp4"
-# DEFAULT_VIDEO = "./datasets/single_white_car.mp4"
-# DEFAULT_VIDEO = "./datasets/volkswagen_pikes_peak_original_cut_3.mp4"
-# DEFAULT_VIDEO = "./datasets/MOT20-02-raw.webm"
-
-YOLOV3_SPP_WEIGHTS = "./models/yolov3/yolov3-spp.weights"
-YOLOV3_SPP_CFG = "./models/yolov3/yolov3-spp.cfg"
-YOLOV3_WEIGHTS = "./models/yolov3/yolov3.weights"
-YOLOV3_CFG = "./models/yolov3/yolov3.cfg"
-COCO_CLASSES_TXT = "./models/yolov3/coco.names"
+YOLOV3_DEFAULT_WEIGHTS = "./models/yolov3/yolov3.weights"
+YOLOV3_DEFAULT_CFG = "./models/yolov3/yolov3.cfg"
+COCO_CLASSES_TXT = "./models/coco.names"
 YOLO_CONFIDENCE_THRESH = 0.6
 
 ## Color matrix for each unique track
@@ -72,16 +65,19 @@ def draw_pf_track(frame, pf_track, color=(255,255,0)):
 def main():
     ### Argument parser setup
     parser = argparse.ArgumentParser(description='particle filter tracker')
-    parser.add_argument('--yolo_weights', dest='yolo_weights', default=YOLOV3_WEIGHTS,
+    parser.add_argument('--yolo_weights', dest='yolo_weights', default=YOLOV3_DEFAULT_WEIGHTS,
                         help='yolo pretrained weights to be used by particle filter')
-    parser.add_argument('--yolo_cfg', dest='yolo_cfg', default=YOLOV3_CFG,
+    parser.add_argument('--yolo_cfg', dest='yolo_cfg', default=YOLOV3_DEFAULT_CFG,
                         help='yolo cfg to be used by particle filter')    
     parser.add_argument('--yolo')
-    parser.add_argument('--video', dest='video', default=DEFAULT_VIDEO,
+    parser.add_argument('--video', dest='video', required=True,
                         help='video to track object')
-    parser.add_argument('--gpu', type=bool, default=False)
-    parser.add_argument('--debug_cv', default=False, action="store_true")
-    parser.add_argument('--output', dest='output', default=None)
+    parser.add_argument('--gpu', type=bool, default=False,
+                        help='enables gpu for opencvs YOLO')
+    parser.add_argument('--debug_cv', default=False, action="store_true",
+                        help='enables debugging frame to frame')
+    parser.add_argument('--output', dest='output', default=None, 
+                        help='video to output too')
 
 
     args = parser.parse_args()
