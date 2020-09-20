@@ -72,23 +72,29 @@ def draw_pf_track(frame, pf_track, color=(255,255,0)):
 def main():
     ### Argument parser setup
     parser = argparse.ArgumentParser(description='particle filter tracker')
-    parser.add_argument('--yolo_model', dest='yolo_model', default="None",
-                        help='yolo model to be used by particle filter')
+    parser.add_argument('--yolo_weights', dest='yolo_weights', default=YOLOV3_WEIGHTS,
+                        help='yolo pretrained weights to be used by particle filter')
+    parser.add_argument('--yolo_cfg', dest='yolo_cfg', default=YOLOV3_CFG,
+                        help='yolo cfg to be used by particle filter')    
+    parser.add_argument('--yolo')
     parser.add_argument('--video', dest='video', default=DEFAULT_VIDEO,
                         help='video to track object')
     parser.add_argument('--gpu', type=bool, default=False)
     parser.add_argument('--debug_cv', default=False, action="store_true")
+    parser.add_argument('--output', dest='output', default=None)
 
 
     args = parser.parse_args()
-    yolo_model = args.yolo_model
+    yolo_weights = args.yolo_weights
+    yolo_cfg = args.yolo_cfg
     video = args.video
     gpu_enable = args.gpu
     debug_cv = args.debug_cv
+    output_video = args.output
 
     ### YOLO Wrapper Creation
-    yolo_cv = YOLO_CV_Wrapper(yolo_weights=YOLOV3_WEIGHTS,
-                            yolo_cfg=YOLOV3_CFG,
+    yolo_cv = YOLO_CV_Wrapper(yolo_weights=yolo_weights,
+                            yolo_cfg=yolo_cfg,
                             yolo_classes=COCO_CLASSES_TXT,
                             gpu_enabled=gpu_enable,
                             confidence_thresh=YOLO_CONFIDENCE_THRESH)
@@ -105,7 +111,10 @@ def main():
 
     # Define the codec and create VideoWriter object for saving video
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter('output.avi',fourcc, 20.0, (frame.shape[1],frame.shape[0]))
+
+    if output_video:
+        print("[!] Writting to video file: {}".format(output_video))
+        out = cv2.VideoWriter(str(output_video),fourcc, 20.0, (frame.shape[1],frame.shape[0]))
 
     while True:
         # Capture frame-by-frame
@@ -134,7 +143,8 @@ def main():
         cv2.imshow('frame',frame)
 
         ### Save frame to video
-        out.write(frame)
+        if output_video:
+            out.write(frame)
         
         ### Wait for key press if debug enabled
         if debug_cv:
