@@ -109,11 +109,11 @@ def main():
     # Extract first frame details
     ret, frame = cap.read()
 
-    # Define the codec and create VideoWriter object for saving video
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-
     if output_video:
         print("[!] Writting to video file: {}".format(output_video))
+
+        # Define the codec and create VideoWriter object for saving video
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
         out = cv2.VideoWriter(str(output_video),fourcc, 20.0, (frame.shape[1],frame.shape[0]))
 
     while True:

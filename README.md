@@ -62,7 +62,7 @@ We can output the tracker results into a file with the following tag `--output`:
 python pf_driver --yolo_weights <path_to_yolo_weights> --yolo_cfg <path_to_yolo_cfg> --video <path_to_video> --output <name_of_video_output>
 ```
 
-where the `<name_of_video_output>` corresponds to the name of the output video of the tracker. Note that `<name_of_video_output>` requires .avi extension at the end for examnple `particle_filter_tracker_output_video.avi`.
+where the `<name_of_video_output>` corresponds to the name of the output video of the tracker. Note that `<name_of_video_output>` requires .avi extension at the end for example `particle_filter_tracker_output_video.avi`.
 
 
 
